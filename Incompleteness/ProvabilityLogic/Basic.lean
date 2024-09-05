@@ -1,9 +1,11 @@
+import Incompleteness.Arith.DC
 import Incompleteness.DC.Basic
 import Logic.Modal.Hilbert
 
-namespace LO.Modal.Standard.Provability
+namespace LO.ProvabilityLogic
 
 open LO.FirstOrder LO.FirstOrder.DerivabilityCondition
+open LO.Modal
 
 variable {α : Type*} [DecidableEq α]
 
@@ -32,7 +34,20 @@ lemma neg_def : (f[𝔟] ~p) = (f[𝔟] p) ⟶ ⊥ := by rfl
 
 end interpretation
 
+variable [Semiterm.Operator.GoedelNumber L (Sentence L)]
+
 /-
+class ArithmeticalSoundness (Λ : Hilbert α) (𝔟 : ProvabilityPredicate L L) where
+  sound : ∀ {p}, (Λ ⊢! p) → (∀ f, T ⊢!. (f[𝔟] p))
+
+class ArithmeticalSoundness₂ (Λ : Hilbert α) (T₀ T : Theory L) where
+  prov : ProvabilityPredicate L L
+  sound : ∀ {p}, (Λ ⊢! p) → (∀ f, T ⊢!. (f[prov] p))
+
+class ArithmeticalCompleteness (Λ : Hilbert α) (𝔟 : ProvabilityPredicate L L) where
+  prov : ProvabilityPredicate L L
+  complete : ∀ {p}, (∀ f, T ⊢!. (f[𝔟] p)) → (Λ ⊢! p)
+
   TODO:
   `ArithmeticalSoundness`と`ArithmeticalCompleteness`を単純にinstance化する際には大抵`T₀`に依存してしまうため型推論が壊れてしまう．
   もう少し良いやり方がありそうな気もするので一旦コメントアウト
@@ -73,46 +88,33 @@ open ProvabilityPredicate
 variable {L : FirstOrder.Language} [Semiterm.Operator.GoedelNumber L (Sentence L)]
          [DecidableEq (Sentence L)]
          (T₀ T : FirstOrder.Theory L) [T₀ ≼ T] [Diagonalization T₀]
-         (𝔟 : ProvabilityPredicate L L)
+         {𝔟 : ProvabilityPredicate L L}
 
-lemma arithmetical_soundness_K4Loeb [𝔟.HBL T₀ T] (h : 𝐊𝟒(𝐋) ⊢! p) : ∀ {f : realization L α}, T ⊢!. (f[𝔟] p) := by
+lemma arithmetical_soundness_GL [𝔟.HBL T₀ T] (h : 𝐆𝐋 ⊢! p) : ∀ {f : realization L α}, T ⊢!. (f[𝔟] p) := by
   intro f;
-  induction h using Deduction.inducition! with
-  | hRules rl hrl hant ih =>
-    rcases hrl with (⟨_, rfl⟩ | ⟨_, rfl⟩)
-    . simp_all only [List.mem_singleton, forall_eq]; exact D1s (T₀ := T₀) ih;
-    . simp_all only [List.mem_singleton, forall_eq]; exact Loeb.LT T₀ ih;
+  induction h using Deduction.inducition_with_necOnly! with
   | hMaxm hp =>
     rcases hp with (⟨_, _, rfl⟩ | ⟨_, rfl⟩)
-    . exact D2s (T₀ := T₀);
-    . exact D3s (T₀ := T₀);
+    . exact D2_shift (T₀ := T₀);
+    . exact FLT_shift (T₀ := T₀);
+  | hNec ihp =>
+    exact D1_shift (T₀ := T₀) ihp;
   | hMdp ihpq ihp =>
     simp [interpretation] at ihpq;
     exact ihpq ⨀ ihp;
   | _ => dsimp [interpretation]; trivial;
 
-/-
-theorem arithmetical_soundness_GL [𝔟.HBL T₀ T] (h : 𝐆𝐋 ⊢! p) : ∀ {f : realization L α}, T ⊢!. (f[𝔟] p) := by
-  apply arithmetical_soundness_K4Loeb (T₀ := T₀);
-  exact (System.weakerThan_iff.mp reducible_GL_K4Loeb) h;
-
-
 lemma arithmetical_soundness_N [𝔟.HBL T₀ T] (h : 𝐍 ⊢! p) : ∀ {f : realization L α}, T ⊢!. (f[𝔟] p) := by
   intro f;
-  induction h using Deduction.inducition! with
+  induction h using Deduction.inducition_with_necOnly! with
   | hMaxm hp => simp at hp;
-  | hRules rl hrl hant ih =>
-    simp only [Set.mem_setOf_eq] at hrl;
-    obtain ⟨p, rfl⟩ := hrl;
-    simp_all only [List.mem_singleton, forall_eq];
-    exact D1s (T₀ := T₀) ih;
+  | hNec ihp =>
+    exact D1_shift (T₀ := T₀) ihp;
   | hMdp ihpq ihp =>
     simp only [interpretation] at ihpq;
     exact ihpq ⨀ ihp;
   | _ => dsimp [interpretation]; trivial;
--/
+
 end ArithmeticalSoundness
 
-end Modal.Standard.Provability
-
-end LO
+end LO.ProvabilityLogic

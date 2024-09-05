@@ -88,22 +88,26 @@ alias LT := Loeb.LT
 alias FLT := FormalizedLoeb.FLT
 alias Ro := Rosser.Ro
 
-def D1s [HBL1 𝔟 T₀ T]: T ⊢!. σ → T ⊢!. ⦍𝔟⦎σ := by
+def D1_shift [HBL1 𝔟 T₀ T]: T ⊢!. σ → T ⊢!. ⦍𝔟⦎σ := by
   intro h;
   apply System.Subtheory.prf! (𝓢 := T₀);
   apply D1 h;
 
-def D2s [HBL2 𝔟 T₀ T] : T ⊢!. ⦍𝔟⦎(σ ⟶ τ) ⟶ ⦍𝔟⦎σ ⟶ ⦍𝔟⦎τ := by
+def D2_shift [HBL2 𝔟 T₀ T] : T ⊢!. ⦍𝔟⦎(σ ⟶ τ) ⟶ ⦍𝔟⦎σ ⟶ ⦍𝔟⦎τ := by
   apply System.Subtheory.prf! (𝓢 := T₀);
   apply D2;
+
+def D3_shift [HBL3 𝔟 T₀ T] : T ⊢!. ⦍𝔟⦎σ ⟶ ⦍𝔟⦎⦍𝔟⦎σ := by
+  apply System.Subtheory.prf! (𝓢 := T₀);
+  apply D3;
+
+def FLT_shift [FormalizedLoeb 𝔟 T₀ T] : T ⊢!. ⦍𝔟⦎(⦍𝔟⦎σ ⟶ σ) ⟶ ⦍𝔟⦎σ := by
+  apply System.Subtheory.prf! (𝓢 := T₀);
+  apply FLT;
 
 def D2' [HBL 𝔟 T₀ T] [System.ModusPonens T] : T₀ ⊢!. ⦍𝔟⦎(σ ⟶ τ) → T₀ ⊢!. ⦍𝔟⦎σ ⟶ ⦍𝔟⦎τ := by
   intro h;
   exact D2 ⨀ h;
-
-def D3s [HBL3 𝔟 T₀ T] : T ⊢!. ⦍𝔟⦎σ ⟶ ⦍𝔟⦎⦍𝔟⦎σ := by
-  apply System.Subtheory.prf! (𝓢 := T₀);
-  apply D3;
 
 def prov_distribute_imply (h : T ⊢!. σ ⟶ τ) : T₀ ⊢!. ⦍𝔟⦎σ ⟶ ⦍𝔟⦎τ := D2' $ D1 h
 
@@ -117,7 +121,7 @@ def prov_distribute_and : T₀ ⊢!. ⦍𝔟⦎(σ ⋏ τ) ⟶ ⦍𝔟⦎σ ⋏ 
   have h₂ : T₀ ⊢!. ⦍𝔟⦎(σ ⋏ τ) ⟶ ⦍𝔟⦎τ := D2' <| D1 and₂!;
   exact imply_right_and! h₁ h₂;
 
-def prov_distribute_and! : T₀ ⊢!. ⦍𝔟⦎(σ ⋏ τ) → T₀ ⊢!. ⦍𝔟⦎σ ⋏ ⦍𝔟⦎τ := λ h => prov_distribute_and ⨀ h
+def prov_distribute_and' : T₀ ⊢!. ⦍𝔟⦎(σ ⋏ τ) → T₀ ⊢!. ⦍𝔟⦎σ ⋏ ⦍𝔟⦎τ := λ h => prov_distribute_and ⨀ h
 
 def prov_collect_and : T₀ ⊢!. ⦍𝔟⦎σ ⋏ ⦍𝔟⦎τ ⟶ ⦍𝔟⦎(σ ⋏ τ) := by
   have h₁ : T₀ ⊢!. ⦍𝔟⦎σ ⟶ ⦍𝔟⦎(τ ⟶ σ ⋏ τ) := prov_distribute_imply $ and₃!;
@@ -172,7 +176,7 @@ variable [System.Consistent T] [𝔟.HBL1 T₀ T]
 
 theorem unprovable_goedel : T ⊬!. γ := by
   intro h;
-  have h₁ : T ⊢!. ⦍𝔟⦎γ := D1s (T₀ := T₀) h;
+  have h₁ : T ⊢!. ⦍𝔟⦎γ := D1_shift (T₀ := T₀) h;
   have h₂ : T ⊢!. ~⦍𝔟⦎γ := (and₁'! goedel_specAux₁) ⨀ h;
   have : T ⊢!. ⊥ := (neg_equiv'!.mp h₂) ⨀ h₁;
   have : ¬Consistent T := not_consistent_iff_inconsistent.mpr <|
