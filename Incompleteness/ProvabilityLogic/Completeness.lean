@@ -191,6 +191,7 @@ lemma lemma4 (h : ¬M.root ⊧ p) : T ⊢!. Φ.Φ[1] ⟶ ~(Φ.realization.interp
   convert h;
   exact Kripke.FiniteTransitiveTree.get_world_zero_root;
 
+/-
 example
   (h₁ : ¬M.root ⊧ p)
   (h₂ : ¬M.root ⊧ p)
@@ -204,6 +205,7 @@ example
   have := 𝔅.D1 this;
   sorry;
   -- have := Φ.S4 ⟨1, by sorry⟩ (by simp) ⟨1, by sorry⟩ (by simp) (by sorry) ⨀ this;
+-/
 
 end
 
