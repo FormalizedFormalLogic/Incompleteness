@@ -2,7 +2,7 @@ import Incompleteness.Arith.DC
 import Incompleteness.DC.Basic
 import Logic.Modal.Hilbert
 
-namespace LO.ProvabilityLogic
+namespace LO
 
 open LO.FirstOrder LO.FirstOrder.DerivabilityCondition
 open LO.Modal
@@ -11,30 +11,28 @@ variable {α : Type u} [DecidableEq α]
 variable [Semiterm.Operator.GoedelNumber L (Sentence L)]
          {T U : Theory L}
 
+
+namespace ProvabilityLogic
+
 /-- Mapping modal prop vars to first-order sentence -/
-def realization (α : Type u) (L) := α → FirstOrder.Sentence L
+def Realization (α : Type u) (L) := α → FirstOrder.Sentence L
 
 /-- Mapping modal formulae to first-order sentence -/
-def interpretation
+def Realization.interpret
   {T U : FirstOrder.Theory L}
-  (f : realization α L) (𝔟 : ProvabilityPredicate T U) : Formula α → FirstOrder.Sentence L
+  (f : Realization α L) (𝔅 : ProvabilityPredicate T U) : Formula α → FirstOrder.Sentence L
   | .atom a => f a
-  | □p => ⦍𝔟⦎(interpretation f 𝔟 p)
+  | □p => 𝔅 (f.interpret 𝔅 p)
   | ⊥ => ⊥
-  | p ⟶ q => (interpretation f 𝔟 p) ⟶ (interpretation f 𝔟 q)
-scoped notation f "[" 𝔟 "] " p => interpretation f 𝔟 p -- TODO: more good notation
-
-namespace interpretation
-
-end interpretation
+  | p ⟶ q => (f.interpret 𝔅 p) ⟶ (f.interpret 𝔅 q)
 
 variable [Semiterm.Operator.GoedelNumber L (Sentence L)]
 
-class ArithmeticalSoundness (Λ : Hilbert α) (𝔟 : ProvabilityPredicate T U) where
-  sound : ∀ {p}, (Λ ⊢! p) → (∀ f, U ⊢!. (f[𝔟] p))
+class ArithmeticalSoundness (Λ : Hilbert α) (𝔅 : ProvabilityPredicate T U) where
+  sound : ∀ {p}, (Λ ⊢! p) → (∀ {f : Realization α L}, U ⊢!. (f.interpret 𝔅 p))
 
-class ArithmeticalCompleteness (Λ : Hilbert α) (𝔟 : ProvabilityPredicate T U) where
-  complete : ∀ {p}, (∀ f, U ⊢!. (f[𝔟] p)) → (Λ ⊢! p)
+class ArithmeticalCompleteness (Λ : Hilbert α) (𝔅 : ProvabilityPredicate T U) where
+  complete : ∀ {p}, (∀ {f : Realization α L}, U ⊢!. (f.interpret 𝔅 p)) → (Λ ⊢! p)
 
 
 section ArithmeticalSoundness
@@ -45,19 +43,19 @@ open ProvabilityPredicate
 variable {L : FirstOrder.Language} [Semiterm.Operator.GoedelNumber L (Sentence L)]
          [DecidableEq (Sentence L)]
          {T U : FirstOrder.Theory L} [T ≼ U] [Diagonalization T]
-         {𝔟 : ProvabilityPredicate T U}
+         {𝔅 : ProvabilityPredicate T U}
 
-lemma arithmetical_soundness_N [𝔟.HBL T₀ T] (h : 𝐍 ⊢! p) : ∀ {f : realization L α}, T ⊢!. (f[𝔟] p) := by
+lemma arithmetical_soundness_N (h : 𝐍 ⊢! p) : ∀ {f : Realization α L}, U ⊢!. (f.interpret 𝔅 p) := by
   intro f;
   induction h using Deduction.inducition_with_necOnly! with
   | hMaxm hp => simp at hp;
   | hNec ihp => exact D1_shift ihp;
   | hMdp ihpq ihp =>
-    simp only [interpretation] at ihpq;
+    simp only [Realization.interpret] at ihpq;
     exact ihpq ⨀ ihp;
-  | _ => dsimp [interpretation]; trivial;
+  | _ => dsimp [Realization.interpret]; trivial;
 
-lemma arithmetical_soundness_GL [𝔟.HBL] (h : 𝐆𝐋 ⊢! p) : ∀ {f : realization α L}, U ⊢!. (f[𝔟] p) := by
+lemma arithmetical_soundness_GL [𝔅.HBL] (h : 𝐆𝐋 ⊢! p) : ∀ {f : Realization α L}, U ⊢!. (f.interpret 𝔅 p) := by
   intro f;
   induction h using Deduction.inducition_with_necOnly! with
   | hMaxm hp =>
@@ -66,17 +64,16 @@ lemma arithmetical_soundness_GL [𝔟.HBL] (h : 𝐆𝐋 ⊢! p) : ∀ {f : real
     . exact FLT_shift;
   | hNec ihp => exact D1_shift ihp;
   | hMdp ihpq ihp =>
-    simp [interpretation] at ihpq;
+    simp [Realization.interpret] at ihpq;
     exact ihpq ⨀ ihp;
-  | _ => dsimp [interpretation]; trivial;
+  | _ => dsimp [Realization.interpret]; trivial;
 
 end ArithmeticalSoundness
 
 
 section
 
-instance (T : Theory ℒₒᵣ) [𝐈𝚺₁ ≼ T] [T.Delta1Definable]
-  : ArithmeticalSoundness (𝐆𝐋 : Hilbert α) (T.standardDP T) := ⟨arithmetical_soundness_GL⟩
+instance (T : Theory ℒₒᵣ) [𝐈𝚺₁ ≼ T] [T.Delta1Definable] : ArithmeticalSoundness (𝐆𝐋 : Hilbert α) (T.standardDP T) := ⟨arithmetical_soundness_GL⟩
 
 end
 
