@@ -13,45 +13,33 @@ instance [s : T ≼ U] : T.alt ≼ U.alt := ⟨fun b ↦ s.prf b⟩
 
 end Theory.Alt
 
+
 namespace DerivabilityCondition
 
-structure ProvabilityPredicate [Semiterm.Operator.GoedelNumber L (Sentence L)] (T₀ : Theory L) (T : Theory L) where
+variable [Semiterm.Operator.GoedelNumber L (Sentence L)]
+
+structure ProvabilityPredicate (T₀ : Theory L) (T : Theory L) where
   prov : Semisentence L 1
   spec {σ : Sentence L} : T ⊢!. σ → T₀ ⊢!. prov/[⌜σ⌝]
 
 namespace ProvabilityPredicate
 
-def pr
-  [Semiterm.Operator.GoedelNumber L (Sentence L)]
-  {T₀ T : Theory L}
-  (𝔅 : ProvabilityPredicate T₀ T) (σ : Sentence L) : Sentence L := 𝔅.prov/[⌜σ⌝]
+variable {T₀ T : Theory L}
 
-instance
-  [Semiterm.Operator.GoedelNumber L (Sentence L)]
-  {T₀ T : Theory L}
-  : CoeFun (ProvabilityPredicate T₀ T) (fun _ => Sentence L → Sentence L) := ⟨pr⟩
+def pr (𝔅 : ProvabilityPredicate T₀ T) (σ : Sentence L) : Sentence L := 𝔅.prov/[⌜σ⌝]
+instance : CoeFun (ProvabilityPredicate T₀ T) (fun _ => Sentence L → Sentence L) := ⟨pr⟩
+
+def con (𝔅 : ProvabilityPredicate T₀ T) : Sentence L := ~(𝔅 ⊥)
 
 end ProvabilityPredicate
 
-class Diagonalization
-  [Semiterm.Operator.GoedelNumber L (Sentence L)]
-  (T : Theory L) where
+class Diagonalization (T : Theory L) where
   fixpoint : Semisentence L 1 → Sentence L
   diag (θ) : T ⊢!. fixpoint θ ⟷ θ/[⌜fixpoint θ⌝]
 
-section Consistency
-
-def consistency
-  [Semiterm.Operator.GoedelNumber L (Sentence L)]
-  {T₀ : Theory L} {T : Theory L}
-  (𝔅 : ProvabilityPredicate T₀ T) : Sentence L := ~(𝔅 ⊥)
-notation "Con(" 𝔅 ")" => consistency 𝔅
-
-end Consistency
-
 namespace ProvabilityPredicate
 
-variable [Semiterm.Operator.GoedelNumber L (Sentence L)] {T₀ : Theory L} {T : Theory L}
+variable {T₀ T : Theory L}
 
 class HBL2 (𝔅 : ProvabilityPredicate T₀ T) where
   D2 {σ τ : Sentence L} : T₀ ⊢!. 𝔅 (σ ⟶ τ) ⟶ (𝔅 σ) ⟶ (𝔅 τ)
@@ -74,7 +62,7 @@ section
 
 open LO.System
 
-variable [DecidableEq (Sentence L)] [Semiterm.Operator.GoedelNumber L (Sentence L)]
+variable [DecidableEq (Sentence L)]
          {T₀ T : Theory L} [T₀ ≼ T]
          {𝔅 : ProvabilityPredicate T₀ T} [𝔅.HBL]
          {σ τ : Sentence L}
@@ -131,7 +119,7 @@ end
 
 end ProvabilityPredicate
 
-variable [DecidableEq (Sentence L)] [Semiterm.Operator.GoedelNumber L (Sentence L)]
+variable [DecidableEq (Sentence L)]
          {T₀ T : Theory L} [T₀ ≼ T] [Diagonalization T₀]
          {𝔅 : ProvabilityPredicate T₀ T} [𝔅.HBL]
          {σ τ : Sentence L}
@@ -202,9 +190,9 @@ section Second
 
 variable [Diagonalization T] [𝔅.HBL]
 
-lemma formalized_consistent_of_existance_unprovable : T₀ ⊢!. ~(𝔅 σ) ⟶ Con(𝔅) := contra₀'! $ 𝔅.D2 ⨀ (D1 efq!)
+lemma formalized_consistent_of_existance_unprovable : T₀ ⊢!. ~(𝔅 σ) ⟶ 𝔅.con := contra₀'! $ 𝔅.D2 ⨀ (D1 efq!)
 
-private lemma consistency_lemma_1 [T₀ ≼ U] [𝔅.HBL] : (U ⊢!. Con(𝔅) ⟶ ~(𝔅 σ)) ↔ (U ⊢!. (𝔅 σ) ⟶ 𝔅 (~σ)) := by
+private lemma consistency_lemma_1 [T₀ ≼ U] [𝔅.HBL] : (U ⊢!. 𝔅.con ⟶ ~(𝔅 σ)) ↔ (U ⊢!. (𝔅 σ) ⟶ 𝔅 (~σ)) := by
   constructor;
   . intro H;
     exact contra₃'! $ imp_trans''! (Subtheory.prf! (𝓢 := T₀) formalized_consistent_of_existance_unprovable) H;
@@ -228,19 +216,19 @@ private lemma consistency_lemma_2 : T₀ ⊢!. ((𝔅 σ) ⟶ 𝔅 (~σ)) ⟶ (�
   exact ((FiniteContext.of'! this) ⨀ d₁) ⨀ d₃;
 
 /-- Formalized First Incompleteness Theorem -/
-theorem formalized_unprovable_goedel : T ⊢!. Con(𝔅) ⟶ ~𝔅 γ := by
+theorem formalized_unprovable_goedel : T ⊢!. 𝔅.con ⟶ ~𝔅 γ := by
   have h₁ : T₀ ⊢!. 𝔅 γ ⟶ 𝔅 (𝔅 γ) := D3;
   have h₂ : T ⊢!. 𝔅 γ ⟶ ~γ := Subtheory.prf! $ contra₁'! $ and₁'! goedel_spec;
   have h₃ : T₀ ⊢!. 𝔅 (𝔅 γ) ⟶ 𝔅 (~γ) := prov_distribute_imply h₂;
   exact Subtheory.prf! $ contra₀'! $ consistency_lemma_2 ⨀ (imp_trans''! h₁ h₃);
 
-theorem iff_goedel_consistency : T ⊢!. γ ⟷ Con(𝔅)
+theorem iff_goedel_consistency : T ⊢!. γ ⟷ 𝔅.con
   := iff_trans''! goedel_specAux₁ $ iff_intro! (Subtheory.prf! (𝓢 := T₀) formalized_consistent_of_existance_unprovable) formalized_unprovable_goedel
 
-theorem unprovable_consistency [System.Consistent T] : T ⊬!. Con(𝔅)
+theorem unprovable_consistency [System.Consistent T] : T ⊬!. 𝔅.con
   := unprovable_iff! iff_goedel_consistency |>.mp $ unprovable_goedel
 
-theorem unrefutable_consistency [System.Consistent T] [𝔅.GoedelSound] : T ⊬!. ~Con(𝔅)
+theorem unrefutable_consistency [System.Consistent T] [𝔅.GoedelSound] : T ⊬!. ~𝔅.con
   := unprovable_iff! (neg_replace_iff'! $ iff_goedel_consistency) |>.mp $ unrefutable_goedel
 
 end Second
@@ -288,24 +276,24 @@ instance [𝔅.HBL] : 𝔅.FormalizedLoeb := ⟨formalized_loeb_theorem (T := T)
 
 variable [System.Consistent T]
 
-lemma unprovable_consistency_via_loeb [𝔅.Loeb] : T ⊬!. Con(𝔅) := by
+lemma unprovable_consistency_via_loeb [𝔅.Loeb] : T ⊬!. 𝔅.con := by
   by_contra hC;
   have : T ⊢!. ⊥ := Loeb.LT $ neg_equiv'!.mp hC;
   have : ¬Consistent T := not_consistent_iff_inconsistent.mpr $ inconsistent_iff_provable_bot.mpr (by simpa [provable₀_iff] using this)
   contradiction
 
 lemma formalized_unprovable_not_consistency [𝔅.HBL] [𝔅.GoedelSound]
-  : T ⊬!. Con(𝔅) ⟶ ~𝔅 (~Con(𝔅)) := by
+  : T ⊬!. 𝔅.con ⟶ ~𝔅 (~𝔅.con) := by
   by_contra hC;
-  have : T ⊢!. ~Con(𝔅) := Loeb.LT $ contra₁'! hC;
-  have : T ⊬!. ~Con(𝔅) := unrefutable_consistency;
+  have : T ⊢!. ~𝔅.con := Loeb.LT $ contra₁'! hC;
+  have : T ⊬!. ~𝔅.con := unrefutable_consistency;
   contradiction;
 
 lemma formalized_unrefutable_goedel [𝔅.HBL] [𝔅.GoedelSound]
-  : T ⊬!. Con(𝔅) ⟶ ~𝔅 (~γ) := by
+  : T ⊬!. 𝔅.con ⟶ ~𝔅 (~γ) := by
   by_contra hC;
-  have : T ⊬!. Con(𝔅) ⟶ ~𝔅 (~Con(𝔅))  := formalized_unprovable_not_consistency;
-  have : T ⊢!. Con(𝔅) ⟶ ~𝔅 (~Con(𝔅)) := imp_trans''! hC $ Subtheory.prf! $ and₁'! $ neg_replace_iff'! $ prov_distribute_iff $ neg_replace_iff'! $ iff_goedel_consistency;
+  have : T ⊬!. 𝔅.con ⟶ ~𝔅 (~𝔅.con)  := formalized_unprovable_not_consistency;
+  have : T ⊢!. 𝔅.con ⟶ ~𝔅 (~𝔅.con) := imp_trans''! hC $ Subtheory.prf! $ and₁'! $ neg_replace_iff'! $ prov_distribute_iff $ neg_replace_iff'! $ iff_goedel_consistency;
   contradiction;
 
 end Loeb
@@ -349,8 +337,8 @@ theorem rosser_independent : System.Undecidable T ↑ρ := by
 theorem rosser_first_incompleteness : ¬System.Complete T
   := System.incomplete_iff_exists_undecidable.mpr ⟨ρ, rosser_independent⟩
 
-/-- If `𝔅` satisfies Rosser provability condition, then `Con(𝔅)` is provable in `T`. -/
-theorem kriesel_remark : T ⊢!. Con(𝔅) := by
+/-- If `𝔅` satisfies Rosser provability condition, then `𝔅.con` is provable in `T`. -/
+theorem kriesel_remark : T ⊢!. 𝔅.con := by
   have : T₀ ⊢!. ~𝔅 ⊥ := Ro (neg_equiv'!.mpr (by simp));
   exact Subtheory.prf! $ this;
 

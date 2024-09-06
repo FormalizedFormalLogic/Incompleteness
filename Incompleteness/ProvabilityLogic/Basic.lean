@@ -28,10 +28,10 @@ def Realization.interpret
 
 variable [Semiterm.Operator.GoedelNumber L (Sentence L)]
 
-class ArithmeticalSoundness (Λ : Hilbert α) (𝔅 : ProvabilityPredicate T U) where
+class ArithmeticalSound (Λ : Hilbert α) (𝔅 : ProvabilityPredicate T U) where
   sound : ∀ {p}, (Λ ⊢! p) → (∀ {f : Realization α L}, U ⊢!. (f.interpret 𝔅 p))
 
-class ArithmeticalCompleteness (Λ : Hilbert α) (𝔅 : ProvabilityPredicate T U) where
+class ArithmeticalComplete (Λ : Hilbert α) (𝔅 : ProvabilityPredicate T U) where
   complete : ∀ {p}, (∀ {f : Realization α L}, U ⊢!. (f.interpret 𝔅 p)) → (Λ ⊢! p)
 
 
@@ -73,7 +73,7 @@ end ArithmeticalSoundness
 
 section
 
-instance (T : Theory ℒₒᵣ) [𝐈𝚺₁ ≼ T] [T.Delta1Definable] : ArithmeticalSoundness (𝐆𝐋 : Hilbert α) (T.standardDP T) := ⟨arithmetical_soundness_GL⟩
+instance (T : Theory ℒₒᵣ) [𝐈𝚺₁ ≼ T] [T.Delta1Definable] : ArithmeticalSound (𝐆𝐋 : Hilbert α) (T.standardDP T) := ⟨arithmetical_soundness_GL⟩
 
 end
 
