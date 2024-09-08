@@ -8,7 +8,7 @@ package «Incompleteness» where
   ]
   -- add any additional package configuration options here
 
-require «logic» from git "https://github.com/FormalizedFormalLogic/Foundation" @ "master"
+require «logic» from git "https://github.com/FormalizedFormalLogic/Foundation" @ "fix-for-incompleteness-2"
 
 require arithmetization from git "https://github.com/FormalizedFormalLogic/Arithmetization" @ "master"
 
