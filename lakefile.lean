@@ -1,7 +1,7 @@
 import Lake
 open Lake DSL
 
-require arithmetization from git "https://github.com/FormalizedFormalLogic/Arithmetization" @ "rename"
+require arithmetization from git "https://github.com/FormalizedFormalLogic/Arithmetization" @ "master"
 
 package incompleteness where
   -- Settings applied to both builds and interactive editing
