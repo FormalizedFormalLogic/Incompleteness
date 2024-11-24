@@ -95,7 +95,7 @@
    "type": "git",
    "subDir": null,
    "scope": "FormalizedFormalLogic",
-   "rev": "c452703ba2b6fd57a7eb511590b2ff9d7ba70a05",
+   "rev": "7ff637ce469b3f7eab6e0f514e7f7ceb44e7054c",
    "name": "arithmetization",
    "manifestFile": "lake-manifest.json",
    "inputRev": "master",
