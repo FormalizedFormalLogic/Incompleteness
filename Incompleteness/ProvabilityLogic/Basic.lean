@@ -22,17 +22,17 @@ def Realization.interpret
   {T U : FirstOrder.Theory L}
   (f : Realization α L) (𝔅 : ProvabilityPredicate T U) : Formula α → FirstOrder.Sentence L
   | .atom a => f a
-  | □p => 𝔅 (f.interpret 𝔅 p)
+  | □p => 𝔅 (f.interpret 𝔅 φ)
   | ⊥ => ⊥
-  | p ➝ q => (f.interpret 𝔅 p) ➝ (f.interpret 𝔅 q)
+  | φ ➝ ψ => (f.interpret 𝔅 φ) ➝ (f.interpret 𝔅 ψ)
 
 variable [Semiterm.Operator.GoedelNumber L (Sentence L)]
 
 class ArithmeticalSound (Λ : Hilbert α) (𝔅 : ProvabilityPredicate T U) where
-  sound : ∀ {p}, (Λ ⊢! p) → (∀ {f : Realization α L}, U ⊢!. (f.interpret 𝔅 p))
+  sound : ∀ {φ}, (Λ ⊢! φ) → (∀ {f : Realization α L}, U ⊢!. (f.interpret 𝔅 φ))
 
 class ArithmeticalComplete (Λ : Hilbert α) (𝔅 : ProvabilityPredicate T U) where
-  complete : ∀ {p}, (∀ {f : Realization α L}, U ⊢!. (f.interpret 𝔅 p)) → (Λ ⊢! p)
+  complete : ∀ {φ}, (∀ {f : Realization α L}, U ⊢!. (f.interpret 𝔅 φ)) → (Λ ⊢! φ)
 
 
 section ArithmeticalSoundness
@@ -45,7 +45,7 @@ variable {L : FirstOrder.Language} [Semiterm.Operator.GoedelNumber L (Sentence L
          {T U : FirstOrder.Theory L} [T ≼ U]
          {𝔅 : ProvabilityPredicate T U}
 
-lemma arithmetical_soundness_N (h : 𝐍 ⊢! p) : ∀ {f : Realization α L}, U ⊢!. (f.interpret 𝔅 p) := by
+lemma arithmetical_soundness_N (h : 𝐍 ⊢! φ) : ∀ {f : Realization α L}, U ⊢!. (f.interpret 𝔅 φ) := by
   intro f;
   induction h using Deduction.inducition_with_necOnly! with
   | hMaxm hp => simp at hp;
@@ -55,7 +55,7 @@ lemma arithmetical_soundness_N (h : 𝐍 ⊢! p) : ∀ {f : Realization α L}, U
     exact ihpq ⨀ ihp;
   | _ => dsimp [Realization.interpret]; trivial;
 
-lemma arithmetical_soundness_GL [Diagonalization T] [𝔅.HBL] (h : 𝐆𝐋 ⊢! p) : ∀ {f : Realization α L}, U ⊢!. (f.interpret 𝔅 p) := by
+lemma arithmetical_soundness_GL [Diagonalization T] [𝔅.HBL] (h : 𝐆𝐋 ⊢! φ) : ∀ {f : Realization α L}, U ⊢!. (f.interpret 𝔅 φ) := by
   intro f;
   induction h using Deduction.inducition_with_necOnly! with
   | hMaxm hp =>
