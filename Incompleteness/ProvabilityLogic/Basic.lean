@@ -6,6 +6,7 @@ namespace LO
 
 open LO.FirstOrder LO.FirstOrder.DerivabilityCondition
 open LO.Modal
+open LO.Modal.Hilbert
 
 variable {α : Type u}
 variable [Semiterm.Operator.GoedelNumber L (Sentence L)]
@@ -22,7 +23,7 @@ def Realization.interpret
   {T U : FirstOrder.Theory L}
   (f : Realization α L) (𝔅 : ProvabilityPredicate T U) : Formula α → FirstOrder.Sentence L
   | .atom a => f a
-  | □p => 𝔅 (f.interpret 𝔅 φ)
+  | □φ => 𝔅 (f.interpret 𝔅 φ)
   | ⊥ => ⊥
   | φ ➝ ψ => (f.interpret 𝔅 φ) ➝ (f.interpret 𝔅 ψ)
 
@@ -45,17 +46,18 @@ variable {L : FirstOrder.Language} [Semiterm.Operator.GoedelNumber L (Sentence L
          {T U : FirstOrder.Theory L} [T ≼ U]
          {𝔅 : ProvabilityPredicate T U}
 
-lemma arithmetical_soundness_N (h : 𝐍 ⊢! φ) : ∀ {f : Realization α L}, U ⊢!. (f.interpret 𝔅 φ) := by
+lemma arithmetical_soundness_N (h : (Hilbert.N α) ⊢! φ) : ∀ {f : Realization α L}, U ⊢!. (f.interpret 𝔅 φ) := by
   intro f;
   induction h using Deduction.inducition_with_necOnly! with
   | hMaxm hp => simp at hp;
   | hNec ihp => exact D1_shift ihp;
-  | hMdp ihpq ihp =>
-    simp only [Realization.interpret] at ihpq;
-    exact ihpq ⨀ ihp;
-  | _ => dsimp [Realization.interpret]; trivial;
+  | hMdp ihpq ihp => exact ihpq ⨀ ihp;
+  | hImply₁ => exact imply₁!;
+  | hImply₂ => exact imply₂!;
+  | hElimContra => exact elim_contra_neg!;
 
-lemma arithmetical_soundness_GL [Diagonalization T] [𝔅.HBL] (h : 𝐆𝐋 ⊢! φ) : ∀ {f : Realization α L}, U ⊢!. (f.interpret 𝔅 φ) := by
+
+lemma arithmetical_soundness_GL [Diagonalization T] [𝔅.HBL] (h : (Hilbert.GL α) ⊢! φ) : ∀ {f : Realization α L}, U ⊢!. (f.interpret 𝔅 φ) := by
   intro f;
   induction h using Deduction.inducition_with_necOnly! with
   | hMaxm hp =>
@@ -63,17 +65,17 @@ lemma arithmetical_soundness_GL [Diagonalization T] [𝔅.HBL] (h : 𝐆𝐋 ⊢
     . exact D2_shift;
     . exact FLT_shift;
   | hNec ihp => exact D1_shift ihp;
-  | hMdp ihpq ihp =>
-    simp [Realization.interpret] at ihpq;
-    exact ihpq ⨀ ihp;
-  | _ => dsimp [Realization.interpret]; trivial;
+  | hMdp ihpq ihp => exact ihpq ⨀ ihp;
+  | hImply₁ => exact imply₁!;
+  | hImply₂ => exact imply₂!;
+  | hElimContra => exact elim_contra_neg!;
 
 end ArithmeticalSoundness
 
 
 section
 
-instance (T : Theory ℒₒᵣ) [𝐈𝚺₁ ≼ T] [T.Delta1Definable] : ArithmeticalSound (𝐆𝐋 : Hilbert α) (T.standardDP T) := ⟨arithmetical_soundness_GL⟩
+instance (T : Theory ℒₒᵣ) [𝐈𝚺₁ ≼ T] [T.Delta1Definable] : ArithmeticalSound (Hilbert.GL α) (T.standardDP T) := ⟨arithmetical_soundness_GL⟩
 
 end
 
