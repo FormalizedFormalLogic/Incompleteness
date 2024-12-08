@@ -8,3 +8,4 @@ import Incompleteness.Arith.DC
 import Incompleteness.DC.Basic
 
 import Incompleteness.ProvabilityLogic.Basic
+import Incompleteness.ProvabilityLogic.Completeness
