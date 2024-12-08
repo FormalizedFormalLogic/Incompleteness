@@ -7,5 +7,5 @@ import Incompleteness.Arith.Second
 import Incompleteness.Arith.DC
 import Incompleteness.DC.Basic
 
-import Incompleteness.ProvabilityLogic.Basic
-import Incompleteness.ProvabilityLogic.Completeness
+import Incompleteness.ProvabilityLogic.Soundness
+import Incompleteness.ProvabilityLogic.GL.Completeness
