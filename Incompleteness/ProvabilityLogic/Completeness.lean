@@ -122,6 +122,7 @@ namespace LO.ProvabilityLogic
 open Classical
 
 open System System.FiniteContext
+open Modal
 open Modal.Formula
 open Modal.Formula.Kripke
 open Modal.Kripke
@@ -151,7 +152,7 @@ structure SolovaySentences
         |>.map (λ j => Φ[j]);
       T ⊢!. Φ[i] ➝ 𝔅 (⋁Φ')
     S4 :
-      ∀ i : Fin Φ.length, (hi : i ≠ ⟨0, by omega⟩) →
+      ∀ i : Fin Φ.length,
       ∀ j : Fin Φ.length, (hj : j ≠ ⟨0, by omega⟩) →
       letI wi : M.World := M.get_world ⟨i.1 - 1, by omega⟩;
       letI wj : M.World := M.get_world ⟨j.1 - 1, by omega⟩;
@@ -191,17 +192,16 @@ end SolovaySentences
 
 
 variable [𝔅.HBL]
-variable {Φ : SolovaySentences 𝔅 M}
-variable {φ : Modal.Formula ℕ}
+variable {A : Modal.Formula ℕ}
 
 lemma lemma3
   (Φ : SolovaySentences 𝔅 M) (i : Fin Φ.length) (hi : i ≠ ⟨0, by simp⟩)
-  (φ : Modal.Formula ℕ) :
+  (A : Modal.Formula ℕ) :
   let wi : M.World := M.get_world ⟨i - 1, SolovaySentences.ln_M_size hi⟩
-  (wi ⊧ φ → T ⊢!. Φ.Φ[i] ➝ (Φ.realization.interpret 𝔅 φ)) ∧ (¬(wi ⊧ φ) → T ⊢!. Φ.Φ[i] ➝ ∼(Φ.realization.interpret 𝔅 φ))
+  (wi ⊧ A → T ⊢!. Φ.Φ[i] ➝ (Φ.realization.interpret 𝔅 A)) ∧ (¬(wi ⊧ A) → T ⊢!. Φ.Φ[i] ➝ ∼(Φ.realization.interpret 𝔅 A))
    := by
    intro wi;
-   induction φ using Modal.Formula.rec' generalizing i with
+   induction A using Modal.Formula.rec' generalizing i with
     | hfalsum => simp [Realization.interpret, Semantics.Realize, Satisfies];
     | hatom a =>
       simp only [Realization.interpret, SolovaySentences.realization];
@@ -232,22 +232,22 @@ lemma lemma3
             have : wi ⊧ (atom a) := by simpa [hi] using hj;
             contradiction;
           . rfl;
-    | himp φ ψ ihφ ihψ =>
+    | himp A B ihA ihB =>
       simp only [Realization.interpret];
       constructor;
       . intro h;
         rcases (not_or_of_imp $ Satisfies.imp_def.mp h) with (hp | hq);
         . apply deduct'!;
-          exact efq_imply_not₁! ⨀ (deductInv'! $ ihφ i hi |>.2 hp)
+          exact efq_imply_not₁! ⨀ (deductInv'! $ ihA i hi |>.2 hp)
         . apply deduct'!;
-          exact imply₁'! $ deductInv'! $ ihψ i hi |>.1 hq;
+          exact imply₁'! $ deductInv'! $ ihB i hi |>.1 hq;
       . intro h;
         have := Satisfies.imp_def.not.mp h; push_neg at this;
         replace ⟨hp, hq⟩ := this;
-        have hp := ihφ i hi |>.1 hp;
-        have hq := ihψ i hi |>.2 hq;
+        have hp := ihA i hi |>.1 hp;
+        have hq := ihB i hi |>.2 hq;
         exact not_imply_prem''! hp hq;
-    | hbox φ ihφ =>
+    | hbox A ihA =>
       simp only [Realization.interpret];
       constructor;
       . intro h;
@@ -257,21 +257,52 @@ lemma lemma3
         intro j hj;
         simp at hj;
         obtain ⟨j, ⟨hj₂, rfl⟩⟩ := hj;
-        apply ihφ j (by rintro rfl; simp at hj₂) |>.1;
+        apply ihA j (by rintro rfl; simp at hj₂) |>.1;
         apply h;
         exact hj₂;
       . intro h;
         have := Satisfies.box_def.not.mp h; push_neg at this;
         obtain ⟨wj, hwj, hwj'⟩ := this;
         let j := M.get_index wj;
-        have : T ⊢!. Φ.Φ[↑j + 1] ➝ ∼Φ.realization.interpret 𝔅 φ := ihφ ⟨j.1 + 1, by simp⟩ (by simp) |>.2 (by convert hwj'; simp [j]);
+        have : T ⊢!. Φ.Φ[↑j + 1] ➝ ∼Φ.realization.interpret 𝔅 A := ihA ⟨j.1 + 1, by simp⟩ (by simp) |>.2 (by convert hwj'; simp [j]);
         have h₁ := 𝔅.prov_distribute_imply $ contra₁'! this;
-        have h₂ := Φ.S4 i hi ⟨j.1 + 1, by simp⟩ (by simp) (by convert hwj; simp [j]);
+        have h₂ := Φ.S4 i ⟨j.1 + 1, by simp⟩ (by simp) (by convert hwj; simp [j]);
         exact contra₁'! $ imp_trans''! h₁ h₂;
 
-lemma lemma4 (h : ¬M.root ⊧ φ) : T ⊢!. Φ.Φ[1] ➝ ∼(Φ.realization.interpret 𝔅 φ) := by
-  apply lemma3 Φ ⟨1, by simp⟩ (by simp) φ |>.2;
+lemma lemma4 {Φ : SolovaySentences 𝔅 M} (h : ¬M.root ⊧ A) : T ⊢!. Φ.Φ[1] ➝ ∼(Φ.realization.interpret 𝔅 A) := by
+  apply lemma3 Φ ⟨1, by simp⟩ (by simp) A |>.2;
   convert h;
   exact FiniteTransitiveTree.get_world_zero_root;
+
+lemma lemma5 [Consistent T] (Φ : SolovaySentences 𝔅 M↧) (h : ¬M.root ⊧ A) : T ⊬. Φ.realization.interpret 𝔅 A := by
+  by_contra hC;
+  suffices T ⊢!. ⊥ by
+    have : ¬Consistent T := consistent_iff_unprovable_bot.not.mpr $ by simpa using this;
+    contradiction;
+
+  have : T ⊢!. Φ.Φ[1] ➝ ∼Φ.realization.interpret 𝔅 A := lemma4 $ by
+    have := @FiniteTransitiveTreeModel.SimpleExtension.modal_equivalence_original_world M M.root A |>.not.mp h;
+    suffices ¬(Satisfies  M↧.toModel (Sum.inr M.root) A) by sorry;
+    exact this;
+  have : T ⊢!. ∼Φ.Φ[1] := contra₁'! this ⨀ hC;
+  have : T ⊢!. (𝔅 (∼Φ.Φ[1])) := D1_shift this;
+  have : T ⊢!. ∼Φ.Φ[0] := Φ.S4 ⟨0, by simp⟩ ⟨1, by simp⟩ (by simp) (by sorry) ⨀ this;
+
+  sorry;
+
+noncomputable def _root_.LO.Modal.Kripke.FiniteTransitiveTreeModel.solovaySentences (M : FiniteTransitiveTreeModel) (𝔅 : ProvabilityPredicate T T) : SolovaySentences 𝔅 M := by sorry;
+
+lemma lemma6 [Consistent T] (h : (Hilbert.GL ℕ) ⊬ A) : ∃ f : Realization _ _, T ⊬. f.interpret 𝔅 A := by
+  obtain ⟨M, h⟩ := @Hilbert.GL.Kripke.unprovable_iff_exists_unsatisfies_at_root_on_FiniteTransitiveTree A |>.mp h;
+  letI Φ := M↧.solovaySentences 𝔅;
+  use Φ.realization;
+  exact lemma5 Φ h;
+
+theorem arithcomp [Consistent T] : (∀ {f : Realization _ _}, T ⊢!. f.interpret 𝔅 A) → (Hilbert.GL ℕ) ⊢! A := by
+  contrapose;
+  push_neg;
+  exact lemma6;
+
+instance {T : FirstOrder.Theory ℒₒᵣ} [Consistent T] [𝐈𝚺₁ ≼ T] [T.Delta1Definable] : ArithmeticalComplete (Hilbert.GL ℕ) (FirstOrder.Theory.standardDP T T) := ⟨arithcomp⟩
 
 end LO.ProvabilityLogic
