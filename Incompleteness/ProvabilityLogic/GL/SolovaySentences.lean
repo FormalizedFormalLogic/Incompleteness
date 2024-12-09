@@ -131,7 +131,7 @@ lemma lemma1
       . intro h;
         apply imp_trans''! (Φ.S3 i hi) ?_;
         apply prov_distribute_imply;
-        apply disj_intro;
+        apply disj_intro!;
         intro j hj;
         simp at hj;
         obtain ⟨j, ⟨hj₂, rfl⟩⟩ := hj;
@@ -152,20 +152,32 @@ lemma lemma2 {Φ : SolovaySentences 𝔅 M} (h : ¬M.root ⊧ A) : T ⊢!. Φ.Φ
   convert h;
   exact FiniteTransitiveTree.get_world_zero_root;
 
-lemma lemma3 [Consistent T] (Φ : SolovaySentences 𝔅 M↧) (h : ¬M.root ⊧ A) : T ⊬. Φ.realization.interpret 𝔅 A := by
+instance [h : Consistent T] : Consistent T.alt := by sorry
+
+lemma lemma3 [Consistent T] (Φ : SolovaySentences 𝔅 M↧) (h : ¬M.root ⊧ A)
+  (soundness : ∀ k, T ⊢!. 𝔅 (Φ.realization.interpret 𝔅 (□^[k]⊥)) → T ⊢!. Φ.realization.interpret 𝔅 (□^[k]⊥))
+  : T ⊬. Φ.realization.interpret 𝔅 A := by
   by_contra hC;
   suffices T ⊢!. ⊥ by
     have : ¬Consistent T := consistent_iff_unprovable_bot.not.mpr $ by simpa using this;
     contradiction;
-
   have : T ⊢!. Φ.Φ[1] ➝ ∼Φ.realization.interpret 𝔅 A := lemma2 $ by
     have := @FiniteTransitiveTreeModel.SimpleExtension.modal_equivalence_original_world M M.root A |>.not.mp h;
-    suffices ¬(Satisfies  M↧.toModel (Sum.inr M.root) A) by sorry;
+    suffices ¬(Satisfies M↧.toModel (Sum.inr M.root) A) by sorry;
     exact this;
   have : T ⊢!. ∼Φ.Φ[1] := contra₁'! this ⨀ hC;
   have : T ⊢!. (𝔅 (∼Φ.Φ[1])) := D1_shift this;
   have : T ⊢!. ∼Φ.Φ[0] := Φ.S4 ⟨0, by simp⟩ ⟨1, by simp⟩ (by simp) (by sorry) ⨀ this;
-  sorry;
+  have : T ⊢!. ⋁Φ.Φ.tail := disj_tail! (by simp) Φ.S1 (by assumption);
+  have : T ⊢!. Φ.realization.interpret 𝔅 (□^[7]⊥) := disj_outro! this $ by
+    intro j hj;
+    convert @lemma1 T 𝔅 _ (Φ := Φ) _ ⟨Φ.Φ.indexOf j, ?_⟩ ?_ _ |>.1 ?_;
+    . simp;
+    . apply List.indexOf_lt_length.mpr;
+      exact List.mem_of_mem_tail hj;
+    . sorry;
+    . sorry;
+  exact Realization.unbox_bot soundness this;
 
 end SolovaySentences
 

@@ -55,7 +55,7 @@ lemma disj_mem! (h : p ∈ Γ) : 𝓢 ⊢! p ➝ ⋁Γ := by
 lemma not_imply_prem''! (hpq : 𝓢 ⊢! p ➝ q) (hpnr : 𝓢 ⊢! p ➝ ∼(r)) : 𝓢 ⊢! p ➝ ∼(q ➝ r) :=
   deduct'! $ (contra₀'! $ not_or_of_imply!) ⨀ (demorgan₂'! $ and₃'! (dni'! $ of'! hpq ⨀ (by_axm!)) (of'! hpnr ⨀ (by_axm!)))
 
-lemma disj_intro (h : ∀ q ∈ Γ, 𝓢 ⊢! q ➝ p) : 𝓢 ⊢! ⋁Γ ➝ p := by
+lemma disj_intro! (h : ∀ q ∈ Γ, 𝓢 ⊢! q ➝ p) : 𝓢 ⊢! ⋁Γ ➝ p := by
   induction Γ using List.induction_with_singleton with
   | hnil => simp;
   | hsingle q => simp_all;
@@ -64,6 +64,78 @@ lemma disj_intro (h : ∀ q ∈ Γ, 𝓢 ⊢! q ➝ p) : 𝓢 ⊢! ⋁Γ ➝ p :
     obtain ⟨h₁, h₂⟩ := by simpa using h;
     replace h₂ := ih h₂;
     exact or₃''! h₁ h₂;
+
+lemma disj_outro! [System.Consistent 𝓢]
+  (h₁ : 𝓢 ⊢! ⋁Γ) (h₂ : ∀ q ∈ Γ, 𝓢 ⊢! q ➝ p) : 𝓢 ⊢! p := by
+  induction Γ using List.induction_with_singleton with
+  | hnil =>
+    obtain ⟨f, hf⟩ := Consistent.exists_unprovable (𝓢 := 𝓢) (by assumption);
+    have : 𝓢 ⊢! f := efq'! $ by simpa using h₁;
+    contradiction;
+  | hsingle r =>
+    simp_all;
+    exact h₂ ⨀ h₁;
+  | hcons q Γ hΓ ih =>
+    simp_all;
+    have ⟨h₂₁, h₂₂⟩ := h₂;
+    apply or₃'''! (d₃ := h₁);
+    . exact h₂₁;
+    . apply disj_intro!;
+      exact h₂₂;
+
+
+/-
+section
+
+-- TODO: cancel class
+
+lemma cancel_or_left! (cancel : ∀ {p}, 𝓢 ⊬ p → 𝓢 ⊢! ∼p) (hpq : 𝓢 ⊢! p ⋎ q) (hp : 𝓢 ⊬ p) : 𝓢 ⊢! q := by
+  apply or₃'''! (𝓢 := 𝓢) (φ := p) (ψ := q) (χ := q);
+  . apply imply_of_not_or'!;
+    apply or₁'!;
+    apply cancel hp;
+  . simp;
+  . assumption;
+
+lemma cancel_or_right! (cancel : ∀ {p}, 𝓢 ⊬ p → 𝓢 ⊢! ∼p) (hpq : 𝓢 ⊢! p ⋎ q) (hq : 𝓢 ⊬ q) : 𝓢 ⊢! p := by
+  apply cancel_or_left! (p := q) (q := p) cancel;
+  . exact or_comm'! hpq;
+  . exact hq;
+
+lemma disj_tail! (cancel : ∀ {p}, 𝓢 ⊬ p → 𝓢 ⊢! ∼p) (Γ_nil : Γ.length > 0) (h₁ : 𝓢 ⊢! ⋁Γ) (h₂ : 𝓢 ⊬ Γ[0]) : 𝓢 ⊢! ⋁(Γ.tail) := by
+  induction Γ using List.induction_with_singleton with
+  | hnil => simp at Γ_nil;
+  | hsingle q => simp_all;
+  | hcons q Γ hΓ ih =>
+    simp_all;
+    exact cancel_or_left! cancel h₁ h₂;
+
+end
+-/
+
+lemma cancel_or_left! (hpq : 𝓢 ⊢! p ⋎ q) (hp : 𝓢 ⊢! ∼p) : 𝓢 ⊢! q := by
+  apply or₃'''! (𝓢 := 𝓢) (φ := p) (ψ := q) (χ := q);
+  . apply imply_of_not_or'!;
+    apply or₁'!;
+    apply hp;
+  . simp;
+  . assumption;
+
+lemma cancel_or_right! (hpq : 𝓢 ⊢! p ⋎ q) (hq : 𝓢 ⊢! ∼q) : 𝓢 ⊢! p := by
+  apply cancel_or_left! (p := q) (q := p);
+  . exact or_comm'! hpq;
+  . exact hq;
+
+lemma disj_tail! (Γ_nil : Γ.length > 0) (h₁ : 𝓢 ⊢! ⋁Γ) (h₂ : 𝓢 ⊢! ∼Γ[0]) : 𝓢 ⊢! ⋁(Γ.tail) := by
+  induction Γ using List.induction_with_singleton with
+  | hnil => simp at Γ_nil;
+  | hsingle q =>
+    simp at h₁ h₂;
+    replace h₂ := neg_equiv'!.mp h₂;
+    exact efq'! $ h₂ ⨀ h₁
+  | hcons q Γ hΓ ih =>
+    simp_all;
+    exact cancel_or_left! h₁ h₂;
 
 end LO.System
 
