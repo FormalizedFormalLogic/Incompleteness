@@ -38,12 +38,12 @@ class ArithmeticalComplete (Λ : Hilbert α) (𝔅 : ProvabilityPredicate T U) w
 
 section ArithmeticalSoundness
 
-open System
+open Entailment
 open ProvabilityPredicate
 
 variable {L : FirstOrder.Language} [Semiterm.Operator.GoedelNumber L (Sentence L)]
          [L.DecidableEq]
-         {T U : FirstOrder.Theory L} [T ≼ U]
+         {T U : FirstOrder.Theory L} [T ⪯ U]
          {𝔅 : ProvabilityPredicate T U}
 
 lemma arithmetical_soundness_N (h : (Hilbert.N α) ⊢! φ) : ∀ {f : Realization α L}, U ⊢!. (f.interpret 𝔅 φ) := by
@@ -75,7 +75,7 @@ end ArithmeticalSoundness
 
 section
 
-instance (T : Theory ℒₒᵣ) [𝐈𝚺₁ ≼ T] [T.Delta1Definable] : ArithmeticalSound (Hilbert.GL α) (T.standardDP T) := ⟨arithmetical_soundness_GL⟩
+instance (T : Theory ℒₒᵣ) [𝐈𝚺₁ ⪯ T] [T.Delta1Definable] : ArithmeticalSound (Hilbert.GL α) (T.standardDP T) := ⟨arithmetical_soundness_GL⟩
 
 end
 
